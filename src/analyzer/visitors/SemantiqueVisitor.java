@@ -91,8 +91,25 @@ public class SemantiqueVisitor implements ParserVisitor {
     public Object visit(ASTDeclareStmt node, Object data) {
         String varName = ((ASTIdentifier) node.jjtGetChild(0)).getValue();
 
-        // TODO
-        node.childrenAccept(this, data);
+        if (SymbolTable.containsKey(varName)){
+            throw new SemantiqueError(String.format("Identifier %s has multiple declarations", varName));
+        }
+
+        String typeStr = node.getValue();
+        VarType type = VarType.valueOf(typeStr.toUpperCase());
+
+        switch (typeStr) {
+            case "int":
+                type = VarType.INT;
+                break;
+        }
+
+        SymbolTable.put(varName, type);
+        VAR++;
+
+        if (node.jjtGetNumChildren() > 1) {
+            node.jjtGetChild(1).jjtAccept(this, data);
+        }
 
         return null;
     }
