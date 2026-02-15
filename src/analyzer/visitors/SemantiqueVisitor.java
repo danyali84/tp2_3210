@@ -155,6 +155,7 @@ public class SemantiqueVisitor implements ParserVisitor {
     @Override
     public Object visit(ASTTernary node, Object data) {
         // TODO
+        OP++;
         node.childrenAccept(this, data);
         return null;
     }
@@ -198,6 +199,9 @@ public class SemantiqueVisitor implements ParserVisitor {
             soit le même des deux côtés de l'égalité/l'inégalité.
         */
         // TODO
+        int ops = node.jjtGetNumChildren() - 1;
+        if (ops > 0) OP += ops;
+
         node.childrenAccept(this, data);
         return null;
     }
@@ -213,6 +217,9 @@ public class SemantiqueVisitor implements ParserVisitor {
     @Override
     public Object visit(ASTLogExpr node, Object data) {
         // TODO
+        int ops = node.jjtGetNumChildren() - 1;
+        if (ops > 0) OP += ops;
+
         node.childrenAccept(this, data);
         return null;
     }
@@ -220,6 +227,10 @@ public class SemantiqueVisitor implements ParserVisitor {
     @Override
     public Object visit(ASTAddExpr node, Object data) {
         // TODO
+        int ops = node.jjtGetNumChildren() - 1;
+        if (ops > 0) {
+            OP += ops;
+        }
         node.childrenAccept(this, data);
         return null;
     }
@@ -227,6 +238,9 @@ public class SemantiqueVisitor implements ParserVisitor {
     @Override
     public Object visit(ASTMultExpr node, Object data) {
         // TODO
+        int ops = node.jjtGetNumChildren() - 1;
+        if (ops > 0) OP += ops;
+
         node.childrenAccept(this, data);
         return null;
     }
@@ -238,6 +252,11 @@ public class SemantiqueVisitor implements ParserVisitor {
     @Override
     public Object visit(ASTNotExpr node, Object data) {
         // TODO
+        if (node.jjtGetNumChildren() == 1 &&
+                node.jjtGetParent() instanceof ASTNotExpr) {
+            OP++;
+        }
+
         node.childrenAccept(this, data);
         return null;
     }
@@ -245,6 +264,11 @@ public class SemantiqueVisitor implements ParserVisitor {
     @Override
     public Object visit(ASTNegExpr node, Object data) {
         // TODO
+        if (node.jjtGetNumChildren() == 1 &&
+                node.jjtGetParent() instanceof ASTNotExpr) {
+            OP++;
+        }
+
         node.childrenAccept(this, data);
         return null;
     }
