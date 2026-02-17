@@ -121,15 +121,25 @@ public class SemantiqueVisitor implements ParserVisitor {
     @Override
     public Object visit(ASTIfStmt node, Object data) {
         // TODO
-        node.childrenAccept(this, data);
+        IF++;
+
+        String condType = (String) node.jjtGetChild(0).jjtAccept(this, data);
+
+        if (!condType.equals("bool")) {
+            throw new SemantiqueError("Invalid type in condition");
+        }
+        node.jjtGetChild(1).jjtAccept(this, data);
+
+        if (node.jjtGetNumChildren() == 3) {
+            node.jjtGetChild(2).jjtAccept(this,data);
+        }
         return null;
     }
 
     @Override
     public Object visit(ASTIfCond node, Object data) {
         // TODO
-        node.childrenAccept(this, data);
-        return null;
+        return node.jjtGetChild(0).jjtAccept(this, data);
     }
 
     @Override
@@ -157,15 +167,25 @@ public class SemantiqueVisitor implements ParserVisitor {
     @Override
     public Object visit(ASTWhileStmt node, Object data) {
         // TODO
-        node.childrenAccept(this, data);
+        WHILE++;
+
+        String condType = (String) node.jjtGetChild(0).jjtAccept(this, data);
+
+        if (!condType.equals("bool")) {
+            throw new SemantiqueError("Invalid type in condition");
+        }
+        node.jjtGetChild(1).jjtAccept(this, data);
+
+        if (node.jjtGetNumChildren() == 3) {
+            node.jjtGetChild(2).jjtAccept(this,data);
+        }
         return null;
     }
 
     @Override
     public Object visit(ASTWhileCond node, Object data) {
         // TODO
-        node.childrenAccept(this, data);
-        return null;
+        return node.jjtGetChild(0).jjtAccept(this, data);
     }
 
     @Override
@@ -193,11 +213,19 @@ public class SemantiqueVisitor implements ParserVisitor {
             soit le même des deux côtés de l'égalité/l'inégalité.
         */
         // TODO
+//        int ops = node.jjtGetNumChildren() - 1;
+//        if (ops > 0) OP += ops;
+//
+//        node.childrenAccept(this, data);
+//        return "bool";
         int ops = node.jjtGetNumChildren() - 1;
-        if (ops > 0) OP += ops;
+        if (ops > 0) {
+            OP += ops;
+            node.childrenAccept(this, data);
+            return "bool";
+        }
 
-        node.childrenAccept(this, data);
-        return null;
+        return node.jjtGetChild(0).jjtAccept(this, data);
     }
 
     /*
@@ -215,7 +243,7 @@ public class SemantiqueVisitor implements ParserVisitor {
         if (ops > 0) OP += ops;
 
         node.childrenAccept(this, data);
-        return null;
+        return "bool";
     }
 
     @Override
@@ -226,7 +254,7 @@ public class SemantiqueVisitor implements ParserVisitor {
             OP += ops;
         }
         node.childrenAccept(this, data);
-        return null;
+        return "int";
     }
 
     @Override
@@ -236,7 +264,7 @@ public class SemantiqueVisitor implements ParserVisitor {
         if (ops > 0) OP += ops;
 
         node.childrenAccept(this, data);
-        return null;
+        return "int";
     }
 
     /*
@@ -246,27 +274,19 @@ public class SemantiqueVisitor implements ParserVisitor {
     @Override
     public Object visit(ASTNotExpr node, Object data) {
         // TODO
-        if (node.jjtGetNumChildren() == 1 &&
-                node.jjtGetParent() instanceof ASTNotExpr) {
-            OP++;
-        }
+        OP++;
 
         node.childrenAccept(this, data);
-        return null;
+        return "bool";
     }
 
     @Override
     public Object visit(ASTNegExpr node, Object data) {
         // TODO
-//        if (node.jjtGetNumChildren() == 1 &&
-//                node.jjtGetParent() instanceof ASTNotExpr) {
-//            OP++;
-//        }
-
         OP++;
 
         node.childrenAccept(this, data);
-        return null;
+        return "int";
     }
 
     /*
@@ -275,14 +295,19 @@ public class SemantiqueVisitor implements ParserVisitor {
      */
     @Override
     public Object visit(ASTGenValue node, Object data) {
-        node.childrenAccept(this, data);
-        return null;
+        return node.jjtGetChild(0).jjtAccept(this, data);
     }
 
     @Override
     public Object visit(ASTIdentifier node, Object data) {
         if (node.jjtGetParent() instanceof ASTGenValue) {
             // TODO
+            String varName = (String) node.getValue();
+            if (!SymbolTable.containsKey(varName)) {
+                throw new SemantiqueError(String.format("Variable %s was not declared", varName));
+            }
+
+            return SymbolTable.get(varName).toString().toLowerCase();
         }
 
         return null;
@@ -291,13 +316,13 @@ public class SemantiqueVisitor implements ParserVisitor {
     @Override
     public Object visit(ASTBoolValue node, Object data) {
         // TODO
-        return null;
+        return "bool";
     }
 
     @Override
     public Object visit(ASTIntValue node, Object data) {
         // TODO
-        return null;
+        return "int";
     }
 
     @Override
