@@ -98,12 +98,6 @@ public class SemantiqueVisitor implements ParserVisitor {
         String typeStr = node.getValue();
         VarType type = VarType.valueOf(typeStr.toUpperCase());
 
-        switch (typeStr) {
-            case "int":
-                type = VarType.INT;
-                break;
-        }
-
         SymbolTable.put(varName, type);
         VAR++;
 
@@ -264,10 +258,12 @@ public class SemantiqueVisitor implements ParserVisitor {
     @Override
     public Object visit(ASTNegExpr node, Object data) {
         // TODO
-        if (node.jjtGetNumChildren() == 1 &&
-                node.jjtGetParent() instanceof ASTNotExpr) {
-            OP++;
-        }
+//        if (node.jjtGetNumChildren() == 1 &&
+//                node.jjtGetParent() instanceof ASTNotExpr) {
+//            OP++;
+//        }
+
+        OP++;
 
         node.childrenAccept(this, data);
         return null;
@@ -320,7 +316,7 @@ public class SemantiqueVisitor implements ParserVisitor {
 
     //des outils pour vous simplifier la vie et vous enligner dans le travail
     public enum VarType {
-        INT
+        INT, FLOAT, BOOL, LIST
         // À compléter
     }
 
