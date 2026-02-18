@@ -91,7 +91,7 @@ public class SemantiqueVisitor implements ParserVisitor {
     public Object visit(ASTDeclareStmt node, Object data) {
         String varName = ((ASTIdentifier) node.jjtGetChild(0)).getValue();
 
-        if (SymbolTable.containsKey(varName)){
+        if (SymbolTable.containsKey(varName)) {
             throw new SemantiqueError(String.format("Identifier %s has multiple declarations", varName));
         }
 
@@ -142,7 +142,7 @@ public class SemantiqueVisitor implements ParserVisitor {
         node.jjtGetChild(1).jjtAccept(this, data);
 
         if (node.jjtGetNumChildren() == 3) {
-            node.jjtGetChild(2).jjtAccept(this,data);
+            node.jjtGetChild(2).jjtAccept(this, data);
         }
         return null;
     }
@@ -156,14 +156,18 @@ public class SemantiqueVisitor implements ParserVisitor {
     @Override
     public Object visit(ASTIfBlock node, Object data) {
         // TODO
+        HashMap<String, VarType> savedTable = new HashMap<>(SymbolTable);
         node.childrenAccept(this, data);
+        SymbolTable = savedTable;
         return null;
     }
 
     @Override
     public Object visit(ASTElseBlock node, Object data) {
         // TODO
+        HashMap<String, VarType> savedTable = new HashMap<>(SymbolTable);
         node.childrenAccept(this, data);
+        SymbolTable = savedTable;
         return null;
     }
 
@@ -199,7 +203,7 @@ public class SemantiqueVisitor implements ParserVisitor {
         node.jjtGetChild(1).jjtAccept(this, data);
 
         if (node.jjtGetNumChildren() == 3) {
-            node.jjtGetChild(2).jjtAccept(this,data);
+            node.jjtGetChild(2).jjtAccept(this, data);
         }
         return null;
     }
@@ -213,7 +217,12 @@ public class SemantiqueVisitor implements ParserVisitor {
     @Override
     public Object visit(ASTWhileBlock node, Object data) {
         // TODO
+        HashMap<String, VarType> savedTable = new HashMap<>(SymbolTable);
+
         node.childrenAccept(this, data);
+
+        SymbolTable = savedTable;
+
         return null;
     }
 
@@ -235,18 +244,29 @@ public class SemantiqueVisitor implements ParserVisitor {
             soit le même des deux côtés de l'égalité/l'inégalité.
         */
         // TODO
-//        int ops = node.jjtGetNumChildren() - 1;
-//        if (ops > 0) OP += ops;
-//
-//        node.childrenAccept(this, data);
-//        return "bool";
         int ops = node.jjtGetNumChildren() - 1;
+
         if (ops > 0) {
             OP += ops;
-            node.childrenAccept(this, data);
+
+            String operator = node.getValue();
+
+            String leftType = (String) node.jjtGetChild(0).jjtAccept(this, data);
+            String rightType = (String) node.jjtGetChild(1).jjtAccept(this, data);
+
+            if (operator.equals("<") || operator.equals(">") ||
+                    operator.equals("<=") || operator.equals(">=")) {
+                if (leftType.equals("bool") || rightType.equals("bool")) {
+                    throw new SemantiqueError("Invalid type in expression");
+                }
+            } else if (operator.equals("==") || operator.equals("!=")) {
+                if (!leftType.equals(rightType)) {
+                    throw new SemantiqueError("Invalid type in expression");
+                }
+            }
+
             return "bool";
         }
-
         return node.jjtGetChild(0).jjtAccept(this, data);
     }
 
@@ -264,7 +284,7 @@ public class SemantiqueVisitor implements ParserVisitor {
         int ops = node.jjtGetNumChildren() - 1;
         if (ops > 0) OP += ops;
 
-        node.childrenAccept(this, data);
+        checkOperandsType(node, data, "bool");
         return "bool";
     }
 
@@ -275,7 +295,13 @@ public class SemantiqueVisitor implements ParserVisitor {
         if (ops > 0) {
             OP += ops;
         }
-        node.childrenAccept(this, data);
+        for (int i = 0; i < node.jjtGetNumChildren(); i++) {
+            String childType = (String) node.jjtGetChild(i).jjtAccept(this, data);
+            if (!childType.equals("int") && !childType.equals("float")) {
+                throw new SemantiqueError("Invalid type in expression");
+            }
+        }
+
         return "int";
     }
 
@@ -285,7 +311,13 @@ public class SemantiqueVisitor implements ParserVisitor {
         int ops = node.jjtGetNumChildren() - 1;
         if (ops > 0) OP += ops;
 
-        node.childrenAccept(this, data);
+        for (int i = 0; i < node.jjtGetNumChildren(); i++) {
+            String childType = (String) node.jjtGetChild(i).jjtAccept(this, data);
+            if (!childType.equals("int") && !childType.equals("float")) {
+                throw new SemantiqueError("Invalid type in expression");
+            }
+        }
+
         return "int";
     }
 
@@ -298,7 +330,7 @@ public class SemantiqueVisitor implements ParserVisitor {
         // TODO
         OP++;
 
-        node.childrenAccept(this, data);
+        checkOperandsType(node, data, "bool");
         return "bool";
     }
 
@@ -307,7 +339,12 @@ public class SemantiqueVisitor implements ParserVisitor {
         // TODO
         OP++;
 
-        node.childrenAccept(this, data);
+        for (int i = 0; i < node.jjtGetNumChildren(); i++) {
+            String childType = (String) node.jjtGetChild(i).jjtAccept(this, data);
+            if (!childType.equals("int") && !childType.equals("float")) {
+                throw new SemantiqueError("Invalid type in expression");
+            }
+        }
         return "int";
     }
 
@@ -350,7 +387,7 @@ public class SemantiqueVisitor implements ParserVisitor {
     @Override
     public Object visit(ASTRealValue node, Object data) {
         // TODO
-        return null;
+        return "float";
     }
 
     @Override
@@ -378,5 +415,14 @@ public class SemantiqueVisitor implements ParserVisitor {
             type = p_type;
         }
 
+    }
+
+    private void checkOperandsType(SimpleNode node, Object data, String expectedType) {
+        for (int i = 0; i < node.jjtGetNumChildren(); i++) {
+            String childType = (String) node.jjtGetChild(i).jjtAccept(this, data);
+            if (!childType.equals(expectedType)) {
+                throw new SemantiqueError("Invalid type in expression");
+            }
+        }
     }
 }
