@@ -111,7 +111,18 @@ public class SemantiqueVisitor implements ParserVisitor {
     @Override
     public Object visit(ASTAssignStmt node, Object data) {
         // TODO
-        node.childrenAccept(this, data);
+        String varName = ((ASTIdentifier) node.jjtGetChild(0)).getValue();
+
+        if (!SymbolTable.containsKey(varName)) {
+            throw new SemantiqueError(String.format("Variable %s was not declared", varName));
+        }
+        String exprType = (String) node.jjtGetChild(1).jjtAccept(this, data);
+        String varType = SymbolTable.get(varName).toString().toLowerCase();
+
+        if (!varType.equals(exprType)) {
+            throw new SemantiqueError(String.format("Invalid type in assignation of Identifier %s", varName));
+        }
+
         return null;
     }
 
@@ -159,9 +170,21 @@ public class SemantiqueVisitor implements ParserVisitor {
     @Override
     public Object visit(ASTTernary node, Object data) {
         // TODO
-        OP++;
-        node.childrenAccept(this, data);
-        return null;
+        IF++;
+
+        String condType = (String) node.jjtGetChild(0).jjtAccept(this, data);
+        if (!condType.equals("bool")) {
+            throw new SemantiqueError("Invalid type in condition");
+        }
+
+        String trueType = (String) node.jjtGetChild(1).jjtAccept(this, data);
+        String falseType = (String) node.jjtGetChild(2).jjtAccept(this, data);
+
+        if (!trueType.equals(falseType)) {
+            throw new SemantiqueError("Invalid type in expression");
+        }
+
+        return trueType;
     }
 
     @Override
@@ -170,7 +193,6 @@ public class SemantiqueVisitor implements ParserVisitor {
         WHILE++;
 
         String condType = (String) node.jjtGetChild(0).jjtAccept(this, data);
-
         if (!condType.equals("bool")) {
             throw new SemantiqueError("Invalid type in condition");
         }
