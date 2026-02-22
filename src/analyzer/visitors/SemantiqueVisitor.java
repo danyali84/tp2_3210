@@ -104,7 +104,7 @@ public class SemantiqueVisitor implements ParserVisitor {
                 type = VarType.INT;
                 break;
             case "float":
-                type = VarType.REAL;
+                type = VarType.FLOAT;
                 break;
             case "bool":
                 type = VarType.BOOL;
@@ -429,7 +429,7 @@ public class SemantiqueVisitor implements ParserVisitor {
 
         DataStruct child = new DataStruct();
         node.jjtGetChild(0).jjtAccept(this, child);
-        if(child.type != VarType.INT && child.type != VarType.REAL) {
+        if(child.type != VarType.INT && child.type != VarType.FLOAT) {
             throw new SemantiqueError("Invalid type in expression");
         }
 
@@ -477,7 +477,7 @@ public class SemantiqueVisitor implements ParserVisitor {
     @Override
     public Object visit(ASTRealValue node, Object data) {
         // TODO
-        ((DataStruct) data).type = VarType.REAL;
+        ((DataStruct) data).type = VarType.FLOAT;
         return null;
     }
 
@@ -511,7 +511,7 @@ public class SemantiqueVisitor implements ParserVisitor {
     //des outils pour vous simplifier la vie et vous enligner dans le travail
     public enum VarType {
         INT,
-        REAL,
+        FLOAT,
         BOOL,
         LIST
         // À compléter
